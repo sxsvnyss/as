@@ -3,16 +3,16 @@ const {
     GatewayIntentBits,
     EmbedBuilder,
     Collection,
-    VoiceChannel
+    ActionRowBuilder,
+    ButtonBuilder,
+    ButtonStyle
   } = require("discord.js");
   const { joinVoiceChannel, createAudioPlayer, NoSubscriberBehavior } = require('@discordjs/voice');
   require("dotenv").config();
   const axios = require("axios");
   
-  // Add at the top with other requires
+  // Constants and Collections
   const cooldowns = new Set();
-  
-  // Add after the requires
   const colors = {
     reset: "\x1b[0m",
     bright: "\x1b[1m",
@@ -22,15 +22,14 @@ const {
     magenta: "\x1b[35m"
   };
   
-  // Correct path to the greeting handler
+  // Handlers
   const greetingHandler = require('./Commands/fun/greeting');
   
-  // Replace single channel tracking with array from env
+  // Environment Variables
   const TRACKING_CHANNEL_IDS = process.env.TRACK_CHANNEL_IDS?.split(',') || [];
-  
-  // Add this after other constants
-  const GREETINGS = ['pagi', 'siang', 'sore', 'malam'];
-  const VOICE_CHANNEL_ID = process.env.VOICE_CHANNEL_ID; // Add this to your .env file
+  const VOICE_CHANNEL_ID = process.env.VOICE_CHANNEL_ID;
+  const WELCOME_CHANNEL_ID = process.env.WELCOME_CHANNEL_ID;
+  const customPrefix = process.env.COMMAND_PREFIX || "anw";
   
   // Create client with all necessary intents
   const client = new Client({
@@ -39,11 +38,9 @@ const {
       GatewayIntentBits.GuildMessages,
       GatewayIntentBits.MessageContent,
       GatewayIntentBits.GuildMembers,
+      GatewayIntentBits.GuildVoiceStates
     ],
   });
-  
-  // Set prefix from environment variable or default
-  const customPrefix = process.env.COMMAND_PREFIX || "anw";
   
   // Create a collection for commands
   client.commands = new Collection();
@@ -51,29 +48,30 @@ const {
   // Import all commands
   const commands = {
     moderation: {
-      ban: require("./commands/moderation/ban"),
-      kick: require("./commands/moderation/kick"),
-      timeout: require("./commands/moderation/timeout"),
-      removeTimeout: require("./commands/moderation/removeTimeout"),
+      ban: require("./Commands/moderation/ban"),
+      kick: require("./Commands/moderation/kick"),
+      timeout: require("./Commands/moderation/timeout"),
+      removeTimeout: require("./Commands/moderation/removeTimeout"),
     },
     fun: {
-      afk: require("./commands/fun/afk"),
-      avatar: require("./commands/fun/avatar"),
-      remind: require("./commands/fun/remind"), // Add gang command
+      afk: require("./Commands/fun/afk"),
+      avatar: require("./Commands/fun/avatar"),
+      remind: require("./Commands/fun/remind"),
     },
     utility: {
-      help: require("./commands/utility/help"),
+      help: require("./Commands/utility/help"),
+    },
+    greeting: {
+      welcome: require("./Commands/greeting/welcome"),
     },
   };
   
   // Function to send temporary embed messages
-  async function sendTemporaryEmbed(message, embed, duration = 10000) { // Changed from 5000 to 10000
+  async function sendTemporaryEmbed(message, embed, duration = 10000) {
     try {
       const sentMessage = await message.reply({ embeds: [embed] });
       setTimeout(() => {
-        sentMessage
-          .delete()
-          .catch((err) => console.error("Error deleting message:", err));
+        sentMessage.delete().catch((err) => console.error("Error deleting message:", err));
       }, duration);
     } catch (error) {
       console.error("Error sending temporary embed:", error);
@@ -83,19 +81,13 @@ const {
   // Register commands with modified execute functions
   function registerCommands() {
     const registerCommand = (command) => {
-      // Store the original execute function
       const originalExecute = command.execute;
-  
-      // Create new execute function with reply and auto-delete
       command.execute = async (message, args) => {
         try {
-          // Create a context object with helper functions
           const context = {
             sendTemporaryEmbed: (embed) => sendTemporaryEmbed(message, embed),
             reply: message.reply.bind(message),
           };
-  
-          // Call the original execute with additional context
           await originalExecute.call(command, message, args, context);
         } catch (error) {
           console.error(`Error executing command ${command.name}:`, error);
@@ -104,12 +96,9 @@ const {
             .setTitle("Command Error")
             .setDescription("An error occurred while executing the command.")
             .setTimestamp();
-  
           await sendTemporaryEmbed(message, errorEmbed);
         }
       };
-  
-      // Register command and its aliases
       client.commands.set(command.name, command);
       if (command.aliases) {
         command.aliases.forEach((alias) => {
@@ -118,7 +107,6 @@ const {
       }
     };
   
-    // Register all commands
     Object.values(commands).forEach((category) => {
       Object.values(category).forEach((command) => {
         registerCommand(command);
@@ -126,7 +114,7 @@ const {
     });
   }
   
-  // Webhook logging function with temporary messages
+  // Webhook logging function
   async function logToWebhook(message) {
     try {
       const webhookUrl = process.env.WEBHOOK_URL;
@@ -134,13 +122,11 @@ const {
         console.log("\x1b[33mWebhook URL not configured\x1b[0m");
         return;
       }
-  
       const embed = new EmbedBuilder()
         .setColor("#00ff00")
         .setTitle("Bot Status")
         .setDescription(`**${message}**`)
         .setTimestamp();
-  
       await axios.post(webhookUrl, { embeds: [embed] });
       console.log("\x1b[32mWebhook message sent successfully\x1b[0m");
     } catch (error) {
@@ -148,11 +134,10 @@ const {
     }
   }
   
-  // Ready event
+  // Event Handlers
   client.once("ready", async () => {
     console.log("\x1b[32mBot is now online\x1b[0m");
     
-    // Join voice channel and set up activities
     try {
       // Join voice channel
       const channel = client.channels.cache.get(VOICE_CHANNEL_ID);
@@ -165,7 +150,6 @@ const {
           selfMute: true,
         });
   
-        // Keep connection alive
         const player = createAudioPlayer({
           behaviors: {
             noSubscriber: NoSubscriberBehavior.Pause,
@@ -179,29 +163,26 @@ const {
       const activities = [
         {
           name: 'TITIK KUMPUL',
-          type: 2, // LISTENING
+          type: 2,
           url: 'https://discord.gg/titikkumpul'
         },
         {
           name: 'Want to join our server?',
-          type: 0, // PLAYING
+          type: 0,
           url: 'https://discord.gg/titikkumpul'
         },
         {
           name: 'Titik Kumpul Community',
-          type: 3  // WATCHING
+          type: 3
         }
       ];
   
       let currentActivity = 0;
-      
-      // Set initial activity
       client.user.setPresence({
         activities: [activities[0]],
         status: 'online'
       });
       
-      // Rotate activities
       setInterval(() => {
         currentActivity = (currentActivity + 1) % activities.length;
         client.user.setPresence({
@@ -222,7 +203,7 @@ const {
   client.on("messageCreate", async (message) => {
     if (message.author.bot) return;
   
-    // Only log messages from tracked channels
+    // Track messages in specified channels
     if (TRACKING_CHANNEL_IDS.includes(message.channel.id)) {
       const content = message.content.toLowerCase().trim();
       const timestamp = new Date().toLocaleTimeString();
@@ -239,10 +220,11 @@ const {
       commands.fun.afk.listenForMessages(message);
     }
   
-    // Handle greetings using the new handler
+    // Handle greetings
     const wasGreeting = await greetingHandler.handleGreeting(message);
     if (wasGreeting) return;
   
+    // Handle commands
     if (!message.content.startsWith(customPrefix)) return;
   
     const args = message.content.slice(customPrefix.length).trim().split(/ +/);
@@ -254,9 +236,7 @@ const {
     try {
       await command.execute(message, args);
       console.log(`Command executed: ${commandName} by ${message.author.tag}`);
-      await logToWebhook(
-        `Command ${commandName} executed by ${message.author.tag}`
-      );
+      await logToWebhook(`Command ${commandName} executed by ${message.author.tag}`);
     } catch (error) {
       console.error(`Error executing command ${commandName}:`, error);
       const errorEmbed = new EmbedBuilder()
@@ -264,16 +244,25 @@ const {
         .setTitle("Command Error")
         .setDescription("An error occurred while executing the command.")
         .setTimestamp();
-  
       await sendTemporaryEmbed(message, errorEmbed);
     }
   });
   
-  // Interaction handling
+  // Welcome event handler
+  client.on('guildMemberAdd', async (member) => {
+    try {
+      await commands.greeting.welcome.execute(member);
+      await logToWebhook(`New member welcomed: ${member.user.tag}`);
+    } catch (error) {
+      console.error('Error in welcome event:', error);
+      await logToWebhook(`Error welcoming new member: ${error.message}`);
+    }
+  });
+  
+  // Button interaction handler
   client.on('interactionCreate', async (interaction) => {
     if (!interaction.isButton()) return;
   
-    // Handle creator info button
     if (interaction.customId === 'Made by Sxsvnys') {
       await interaction.reply({ 
         content: '🎨 Want to know more about the Creator? Check your DMs!', 
@@ -311,7 +300,7 @@ const {
     logToWebhook(`Unhandled Rejection: ${error.message}`);
   });
   
-  // Login bot with token
+  // Bot login
   client.login(process.env.DISCORD_TOKEN).catch((error) => {
     console.error("Failed to login:", error);
   });
