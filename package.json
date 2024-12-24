@@ -1,18 +1,11 @@
 {
   "dependencies": {
-<<<<<<< HEAD
+
     "@discordjs/voice": "^0.18.0",
-    "axios": "^1.7.9",
-    "canvas": "^2.11.2",
-    "discord.js": "^14.16.3",
-    "dotenv": "^16.4.7",
-    "jimp": "^1.6.0",
-    "sharp": "^0.33.5"
-=======
     "axios": "^1.7.9",
     "canvas": "^3.0.0",
     "discord.js": "^14.16.3",
     "ytdl-core": "^4.11.5"
->>>>>>> 5fee3fe1ce83a76b5e1603e9c275422fe3b8c014
+
   }
 }
