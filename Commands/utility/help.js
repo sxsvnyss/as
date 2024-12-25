@@ -7,45 +7,51 @@ module.exports = {
     const commands = [
       {
         name: "ban",
-        description: "🚫 Ban a user from the server",
+        description: "🚫 ini buat ngeban",
         usage: "anwban @user [reason]",
         category: "Moderation",
       },
       {
         name: "kick",
-        description: "👢 Kick a user from the server",
+        description: "👢 ini buat ngekick anak ktol dari server",
         usage: "anwkick @user [reason]",
         category: "Moderation",
       },
       {
         name: "timeout",
-        description: "⏳ Timeout a user",
+        description: "⏳ ini buat to orang orang ngespam command",
         usage: "anwtimeout @user <time><s/m/h/w> [reason]",
         category: "Moderation",
       },
       {
         name: "removetimeout",
-        description: "🔄 Remove timeout from a user",
+        description: "🔄 ini buat removeTimeout",
         usage: "anwrto @user",
         category: "Moderation",
       },
       { 
         name: "remind", 
-        description: "⏰ Set a reminder",
+        description: "⏰ ini buat reminder",
         usage: "anwremind [time] [message]",
         category: "Utility" 
       },
       {
         name: "afk",
-        description: "🛌 Set your status to AFK",
+        description: "🛌 ini buat lu AFK",
         usage: "anwafk [reason]",
         category: "Utility",
       },
       {
         name: "avatar",
-        description: "🖼️ Show user's avatar",
+        description: "🖼️ ini buat nunjukin pp orang",
         usage: "anwavatar [@user]",
         category: "Fun",
+      },
+     {
+        name: "Note",
+        description: "Bang udah bang jangan nyepam command,authornya cape ngntot",
+        usage: "—",
+        category: "Note",
       },
     ];
 
@@ -84,6 +90,7 @@ module.exports = {
         (cmd) => cmd.category === "Utility"
       );
       const funCommands = commands.filter((cmd) => cmd.category === "Fun");
+      const NoteCommands = commands.filter((cmd) => cmd.category === "Note");
 
       const moderationEmbed = new EmbedBuilder()
         .setColor("#ff0000")
@@ -115,10 +122,21 @@ module.exports = {
         )
         .setTimestamp();
 
+const NoteEmbed = new EmbedBuilder()
+        .setColor("#ffff00")
+        .setTitle("Note buat lu pada ni ajg")
+        .setDescription(
+          NoteCommands
+            .map((cmd) => `**${cmd.name}**: ${cmd.description}`)
+            .join("\n\n")
+        )
+        .setTimestamp();
+
       await i.reply({ embeds: [moderationEmbed], ephemeral: true });
       await i.followUp({ embeds: [utilityEmbed], ephemeral: true });
       await i.followUp({ embeds: [funEmbed], ephemeral: true });
-    });
+      await i.followUp({ embeds: [NoteEmbed], ephemeral: true });
+     });
 
     // Don't delete help message as it contains buttons
     return helpMessage;
