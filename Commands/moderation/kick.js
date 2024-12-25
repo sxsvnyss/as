@@ -1,32 +1,56 @@
-const { PermissionsBitField } = require('discord.js');
+const { EmbedBuilder, PermissionsBitField } = require('discord.js');
 
 module.exports = {
   name: 'kick',
   description: 'Kicks a user from the server',
-  async execute(message, args) {
+  async execute(message, args, { sendTemporaryEmbed }) {
     // Check permissions
     if (!message.member.permissions.has(PermissionsBitField.Flags.KickMembers)) {
-      return message.reply('❌ You do not have permission to kick members!');
+      const errorEmbed = new EmbedBuilder()
+        .setColor("#ff0000")
+        .setDescription("❌ You do not have permission to kick members!");
+      return await sendTemporaryEmbed(message, errorEmbed);
     }
 
     const member = message.mentions.members.first();
-    const reason = args.slice(1).join(' ') || 'No reason provided';
-
     if (!member) {
-      return message.reply('❌ Please mention a member to kick!');
+      const helpEmbed = new EmbedBuilder()
+        .setColor("#0099ff")
+        .setTitle("Kick Command Help")
+        .setDescription("To kick a user, use the following command:")
+        .addFields(
+          { name: "Usage", value: "`anwkick @user [reason]`" },
+          { name: "Example", value: "`anwkick @user breaking rules`" }
+        )
+        .setTimestamp();
+      return await sendTemporaryEmbed(message, helpEmbed);
     }
+
+    const reason = args.slice(1).join(' ') || 'No reason provided';
 
     // Check if member is kickable
     if (!member.kickable) {
-      return message.reply('❌ I cannot kick this member!');
+      const errorEmbed = new EmbedBuilder()
+        .setColor("#ff0000")
+        .setDescription("❌ I cannot kick this member!");
+      return await sendTemporaryEmbed(message, errorEmbed);
     }
 
     try {
       await member.kick(reason);
-      return message.reply(`✅ Successfully kicked ${member.user.tag} for: ${reason}`);
+      const successEmbed = new EmbedBuilder()
+        .setColor("#00ff00")
+        .setTitle("User Kicked")
+        .setDescription(`✅ Successfully kicked ${member.user.tag}`)
+        .addFields({ name: "Reason", value: reason })
+        .setTimestamp();
+      return await sendTemporaryEmbed(message, successEmbed);
     } catch (error) {
       console.error('Error kicking member:', error);
-      return message.reply('❌ There was an error trying to kick this member!');
+      const errorEmbed = new EmbedBuilder()
+        .setColor("#ff0000")
+        .setDescription("❌ There was an error trying to kick this member!");
+      return await sendTemporaryEmbed(message, errorEmbed);
     }
   },
 };
