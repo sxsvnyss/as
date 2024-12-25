@@ -17,7 +17,7 @@ module.exports = {
         if (!reminderText) {
             const errorEmbed = new EmbedBuilder()
                 .setColor('#ff0000')
-                .setDescription('❌ Please provide a reminder message!')
+                .setDescription('❌ kasih waktu ajg dikira gua dukun apa')
                 .setTimestamp();
             return await sendTemporaryEmbed(message, errorEmbed);
         }
@@ -65,7 +65,7 @@ module.exports = {
         if (timeInMs < MIN_TIME) {
             const errorEmbed = new EmbedBuilder()
                 .setColor('#ff0000')
-                .setDescription('❌ Reminder time must be at least 5 seconds!')
+                .setDescription('❌ Reminder time harus lebih dari 5 detik ngntd!')
                 .setTimestamp();
             return await sendTemporaryEmbed(message, errorEmbed);
         }
@@ -73,7 +73,7 @@ module.exports = {
         if (timeInMs > MAX_TIME) {
             const errorEmbed = new EmbedBuilder()
                 .setColor('#ff0000')
-                .setDescription('❌ Reminder time cannot exceed 7 days!')
+                .setDescription('❌ goblok remind gabisa lebih dari 7 hari dikira gua pembantu lu ajg!')
                 .setTimestamp();
             return await sendTemporaryEmbed(message, errorEmbed);
         }
@@ -88,7 +88,7 @@ module.exports = {
             const confirmationEmbed = new EmbedBuilder()
                 .setColor('#00ff00')
                 .setTitle('⏰ Reminder Set')
-                .setDescription(`I'll remind you in **${formattedTime}**`)
+                .setDescription(`gua ingetin lu pas **${formattedTime}**`)
                 .addFields(
                     { name: 'Message', value: reminderText },
                     { name: 'Will remind at', value: `<t:${Math.floor(endTime.getTime() / 1000)}:F>` }
@@ -102,7 +102,7 @@ module.exports = {
                 const reminderEmbed = new EmbedBuilder()
                     .setColor('#FF9900')
                     .setTitle('⏰ Reminder!')
-                    .setDescription(`Hey ${message.author}, your reminder is here!`)
+                    .setDescription(`woi memek ${message.author}, lu masang reminder ajg!`)
                     .addFields(
                         { name: 'Message', value: reminderText },
                         { name: 'Set', value: `<t:${Math.floor(Date.now() / 1000)}:R>` }
@@ -144,9 +144,9 @@ async function sendHelpMessage(message, sendTemporaryEmbed) {
     const helpEmbed = new EmbedBuilder()
         .setColor('#0099ff')
         .setTitle('⏰ Reminder Command Help')
-        .setDescription('Set a reminder for yourself')
+        .setDescription('Nih jink kaya gini')
         .addFields(
-            { name: 'Usage', value: '`anwremind <time><unit> <message>`' },
+            { name: 'Usage', value: '`anwremind <waktu><berapalama> <alesanluremind>`' },
             { 
                 name: 'Time Units', 
                 value: '`s` = seconds\n`m` = minutes\n`h` = hours\n`d` = days'
